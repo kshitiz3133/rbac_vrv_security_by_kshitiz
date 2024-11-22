@@ -8,7 +8,6 @@ import '../../UI Components/notes_expanded.dart';
 
 class AssociatedMember extends StatelessWidget {
   const AssociatedMember({Key? key}) : super(key: key);
-
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
