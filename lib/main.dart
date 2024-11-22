@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
         designSize: const Size(1920, 1080),
         builder: (context, child) => MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData(
               useMaterial3: true,

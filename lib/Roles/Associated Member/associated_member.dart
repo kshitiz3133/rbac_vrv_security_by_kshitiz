@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/members.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/new_note.dart';
 
 import '../../UI Components/notes.dart';
@@ -10,20 +11,72 @@ class AssociatedMember extends StatelessWidget {
   const AssociatedMember({Key? key}) : super(key: key);
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => Dialog(
-                backgroundColor: Color(0xffCDC6F2),
-                child: AnimatedNewNotice(),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (context) => Dialog(
+                      backgroundColor: Color(0xffCDC6F2),
+                      child: AnimatedNewNotice(),
+                    ),
+                  );
+                });
+              },
+              child: Icon(Icons.add),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (context) => Dialog(
+                      backgroundColor: Color(0xffCDC6F2),
+                      child: MembersInfo(),
+                    ),
+                  );
+                });
+              },
+              child: Icon(Icons.people),
+            ),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.purple.shade100,
               ),
-            );
-          });
-        },
-        child: Icon(Icons.add),
+              child: Text("User"),
+            ),
+            ListTile(
+              title: const Text('Group 1'),
+              subtitle: Text('role'),
+              onTap: () {
+              },
+            ),
+            ListTile(
+              title: const Text('Group 2'),
+              subtitle: Text('role'),
+              onTap: () {
+              },
+            ),
+          ],
+        ),
       ),
       appBar: AppBar(
         title: Text("Your Notice Board"),
@@ -61,7 +114,6 @@ class AssociatedMember extends StatelessWidget {
                                   children: [
                                     ElevatedButton(onPressed: (){}, child: Text("Yes")),
                                     ElevatedButton(onPressed: (){}, child: Text("No")),
-                                    //test of commit
                                   ],
                                 )
                               ],
