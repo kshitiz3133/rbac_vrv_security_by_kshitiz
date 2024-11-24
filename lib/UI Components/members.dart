@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
 
 class MembersInfo extends StatefulWidget {
-  const MembersInfo({Key? key}) : super(key: key);
+  final groupId;
+  const MembersInfo({Key? key, this.groupId}) : super(key: key);
 
   @override
   State<MembersInfo> createState() => _MembersInfoState();
@@ -14,6 +16,23 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
   late Animation<double> _animation;
   TextEditingController textController=TextEditingController();
   var _overlaycontroller = OverlayPortalController();
+  Mock_API mock_api = Mock_API();
+  late List<Map<int,String>> members=[];
+  late List<String> names=[];
+
+  Future<void> fetchmembers() async {
+    var data= await mock_api.getMembersFromGroup(widget.groupId);
+    var mem= await mock_api.getNamesByIds(data);
+    setState(() {
+      members=mem;
+      getNamesSeparatedByCommas();
+    });
+  }
+  Future<void> getNamesSeparatedByCommas() async {
+    setState(() {
+      names = members.map((map) => map.values.first).toList();
+    });
+  }
 
 
   @override
@@ -30,6 +49,7 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
     ).animate(_controller);
 
     _controller.forward(); // Start the animation
+    fetchmembers();
   }
 
   @override
@@ -102,12 +122,18 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
                       ),
                       SizedBox(
                           width: 316.w,
-                          child: Text(
-                            'Members',
-                            textScaler: TextScaler.linear(1),
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 25.sp),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Members',
+                                textScaler: TextScaler.linear(1),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 25.sp),
+                              ),
+                              Text("${members.length}"),
+                            ],
                           )),
                       SizedBox(height: 10,),
                       Container(
@@ -118,10 +144,11 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
                                 mainAxisExtent: 100,
                                 crossAxisCount: 6,
                               ),
-                              itemCount: 5,
+                              itemCount: members.length,
                               itemBuilder: (BuildContext context, int index) {
                                 return Card(
-                                  color: Colors.red ,
+                                  color: Colors.deepPurple ,
+                                  child: Center(child: Text(names[index])),
                                 );
                               }
                           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/members.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/new_note.dart';
 
@@ -43,7 +44,7 @@ class AssociatedMember extends StatelessWidget {
                     barrierDismissible: true,
                     builder: (context) => Dialog(
                       backgroundColor: Color(0xffCDC6F2),
-                      child: MembersInfo(),
+                      child: MembersInfo(groupId: 1,),
                     ),
                   );
                 });
@@ -152,48 +153,7 @@ class AssociatedMember extends StatelessWidget {
           ),
         ],
       ),
-      body: MediaQuery(
-        data: MediaQueryData().copyWith(textScaler: TextScaler.linear(1.2)),
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-            ),
-            itemCount: 4,
-            itemBuilder: (BuildContext context, int index) {
-              var _overlaycontroller = OverlayPortalController();
-              return GestureDetector(
-                onTap: () {
-                  _overlaycontroller.toggle();
-                  print("note opened");
-                },
-                child: OverlayPortal(
-                  controller: _overlaycontroller,
-                  overlayChildBuilder: (BuildContext context) {
-                    return GestureDetector(
-                      onTap: () {
-                        _overlaycontroller.toggle();
-                      },
-                      child: Stack(
-                        children: [
-                          Scaffold(
-                            backgroundColor: Colors.white.withOpacity(0.5),
-                          ),
-                          Center(
-                            child: AnimatedNotice(),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: buildNotice(),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+      body: GroupNotes(groupId: 1,),
     );
   }
 }

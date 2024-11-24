@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
+import 'package:rbac_vrv_security_by_kshitiz/current_user_data.dart';
 class AnimatedNewNotice extends StatefulWidget {
+  // final int groupId;
+  const AnimatedNewNotice({super.key});
+
   @override
   _AnimatedNewNoticeState createState() => _AnimatedNewNoticeState();
 }
@@ -10,7 +15,11 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
   late AnimationController _controller;
   late Animation<double> _animation;
   TextEditingController textController=TextEditingController();
+  /*Mock_API mock_api = Mock_API();
 
+  void newnote(int groupId, List<int> editors, String date, String message)async{
+    await mock_api.addNote(groupId,editors,date,message);
+  }*/
   @override
   void initState() {
     super.initState();
@@ -70,7 +79,7 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
                     SizedBox(
                         width: 316.w,
                         child: Text(
-                          'Owner',
+                          CurrentUser.userdata['name'],
                           textScaler: TextScaler.linear(1),
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
@@ -117,7 +126,9 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
                     Text('19 May 24',style: TextStyle(color: Colors.black.withOpacity(0.2)),),
                     Row(
                       children: [
-                        IconButton(onPressed: (){}, icon: Icon(Icons.check)),
+                        IconButton(onPressed: (){
+                          // newnote(groupId, CurrentUser.userdata['id'], "19 May 2024", textController.text);
+                        }, icon: Icon(Icons.check)),
                       ],
                     )
                   ],

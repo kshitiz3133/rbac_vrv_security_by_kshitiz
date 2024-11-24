@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/notes.dart';
+
+import '../Mock Backend/mock_backend.dart';
 class AnimatedNotice extends StatefulWidget {
+  final Map<String,dynamic> note;
+  final VoidCallback reload;
+
+  const AnimatedNotice({super.key, required this.note, required this.reload});
+
   @override
   _AnimatedNoticeState createState() => _AnimatedNoticeState();
 }
@@ -9,8 +17,24 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  TextEditingController textController=TextEditingController(text: "Bill");
+  late TextEditingController textController=TextEditingController(text: "");
   bool edit=false;
+  late List<Map<int,String>> names=[];
+  Mock_API mock_api=Mock_API();
+  late String result="";
+
+  void getNamesById() async {
+    var data=await mock_api.getNamesByIds(widget.note['editors']);
+    setState(() {
+      names=data;
+    });
+    await getNamesSeparatedByCommas();
+  }
+  Future<void> getNamesSeparatedByCommas() async {
+    setState(() {
+      result = names.map((map) => map.values.first).join(', ');
+    });
+  }
 
   @override
   void initState() {
@@ -26,6 +50,8 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
     ).animate(_controller);
 
     _controller.forward(); // Start the animation
+    getNamesById();
+    textController=TextEditingController(text: widget.note['message']);
   }
 
   @override
@@ -71,7 +97,7 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                     SizedBox(
                         width: 316.w,
                         child: Text(
-                          'Owner',
+                          result,
                           textScaler: TextScaler.linear(1),
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
@@ -114,13 +140,17 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('19 May 24',style: TextStyle(color: Colors.black.withOpacity(0.2)),),
+                    Text(widget.note['date'],style: TextStyle(color: Colors.black.withOpacity(0.2)),),
                     edit?Row(
                         children:[
                           IconButton(onPressed:(){},icon:Icon(Icons.delete_outline)),
-                          IconButton(onPressed:(){setState(() {
-                            edit=!edit;
-                          });},icon:Icon(Icons.check)),
+                          IconButton(onPressed:() async{
+                            await mock_api.updateMessageOfGroup(textController.text, widget.note['id']);
+                            setState(() {
+                              edit=!edit;
+                          });
+                            widget.reload();
+                            },icon:Icon(Icons.check)),
                         ]
                     )
                         :IconButton(onPressed: (){setState(() {
