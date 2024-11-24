@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Roles/Associated%20Member/associated_member.dart';
+import 'package:rbac_vrv_security_by_kshitiz/Roles/IT%20Admin/it_admin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
               useMaterial3: true,
           ),
-          home: AssociatedMember(),
+          home:ITAdmin() // AssociatedMember(),
         ));
   }
 }

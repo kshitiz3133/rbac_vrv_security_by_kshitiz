@@ -115,13 +115,17 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('19 May 24',style: TextStyle(color: Colors.black.withOpacity(0.2)),),
-                    Row(
-                      children: [
-                        IconButton(onPressed: (){setState(() {
-                          edit=!edit;
-                        });}, icon: edit?Icon(Icons.check):Icon(Icons.edit)),
-                      ],
+                    edit?Row(
+                        children:[
+                          IconButton(onPressed:(){},icon:Icon(Icons.delete_outline)),
+                          IconButton(onPressed:(){setState(() {
+                            edit=!edit;
+                          });},icon:Icon(Icons.check)),
+                        ]
                     )
+                        :IconButton(onPressed: (){setState(() {
+                      edit=!edit;
+                    });}, icon: Icon(Icons.edit))
                   ],
                 )
               ],
