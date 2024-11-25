@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
+import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 import 'package:rbac_vrv_security_by_kshitiz/current_user_data.dart';
 class AnimatedNewNotice extends StatefulWidget {
-  // final int groupId;
-  const AnimatedNewNotice({super.key});
+  final int groupId;
+  final VoidCallback reload;
+  const AnimatedNewNotice({super.key, required this.groupId, required this.reload});
+
 
   @override
   _AnimatedNewNoticeState createState() => _AnimatedNewNoticeState();
@@ -15,11 +18,11 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
   late AnimationController _controller;
   late Animation<double> _animation;
   TextEditingController textController=TextEditingController();
-  /*Mock_API mock_api = Mock_API();
+  Mock_API mock_api = Mock_API();
 
   void newnote(int groupId, List<int> editors, String date, String message)async{
     await mock_api.addNote(groupId,editors,date,message);
-  }*/
+  }
   @override
   void initState() {
     super.initState();
@@ -127,7 +130,10 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
                     Row(
                       children: [
                         IconButton(onPressed: (){
-                          // newnote(groupId, CurrentUser.userdata['id'], "19 May 2024", textController.text);
+                          GroupNotes gn = GroupNotes(groupId: widget.groupId);
+                          newnote(widget.groupId, [CurrentUser.userdata['id']], "19 May 2024", textController.text);
+                          widget.reload();
+                          Navigator.pop(context);
                         }, icon: Icon(Icons.check)),
                       ],
                     )

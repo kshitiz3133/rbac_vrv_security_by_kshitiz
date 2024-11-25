@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/notes.dart';
+import 'package:rbac_vrv_security_by_kshitiz/current_user_data.dart';
 
 import '../Mock Backend/mock_backend.dart';
 class AnimatedNotice extends StatefulWidget {
@@ -34,6 +35,16 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
     setState(() {
       result = names.map((map) => map.values.first).join(', ');
     });
+  }
+
+  Future<bool> checkeditaccess() async{
+    bool check= await mock_api.isUserAuthorized(CurrentUser.userdata['id'], widget.note['group_id'], widget.note['id']);
+    if(check) {
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   @override
@@ -143,9 +154,12 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                     Text(widget.note['date'],style: TextStyle(color: Colors.black.withOpacity(0.2)),),
                     edit?Row(
                         children:[
-                          IconButton(onPressed:(){},icon:Icon(Icons.delete_outline)),
+                          IconButton(onPressed:() async {
+                            await mock_api.deleteNoteById(widget.note['id'], widget.note['group_id']);
+                            widget.reload();
+                          }, icon:Icon(Icons.delete_outline)),
                           IconButton(onPressed:() async{
-                            await mock_api.updateMessageOfGroup(textController.text, widget.note['id']);
+                            await mock_api.updateMessageOfGroup(textController.text, widget.note['group_id'],widget.note['id']);
                             setState(() {
                               edit=!edit;
                           });
@@ -153,9 +167,18 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                             },icon:Icon(Icons.check)),
                         ]
                     )
-                        :IconButton(onPressed: (){setState(() {
-                      edit=!edit;
-                    });}, icon: Icon(Icons.edit))
+                        :IconButton(onPressed: ()async{
+                          if(await checkeditaccess()){
+                            setState(() {
+                              edit=!edit;
+                            });
+                          }
+                          else{
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Edit access not granted')),
+                            );
+                          }
+                    }, icon: Icon(Icons.edit))
                   ],
                 )
               ],

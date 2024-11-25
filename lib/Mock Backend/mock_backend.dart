@@ -121,23 +121,23 @@ class Mock_API extends Mock_Backend{
     // Check if the group was found and return the members, otherwise return an empty list
     return group.isNotEmpty ? List<int>.from(group['members']) : [];
   }
-  Future<void> updateMessageOfGroup(String message, int groupId) async {
-    // Find the index of the note related to the groupId in the notes list
-    final noteIndex = Mock_Backend.notes.indexWhere((note) => note['group_id'] == groupId);
+  Future<void> updateMessageOfGroup(String message, int groupId, int noteId) async {
+    // Find the index of the note using both groupId and noteId
+    final noteIndex = Mock_Backend.notes.indexWhere(
+            (note) => note['group_id'] == groupId && note['id'] == noteId);
 
     if (noteIndex != -1) {
       // If the note exists, update the message
       Mock_Backend.notes[noteIndex]['message'] = message;
 
       // Optionally, show feedback to the user after updating the message
-      print("Message updated for group ID $groupId");
-
-      // If needed, you can also trigger some UI update here or return a success message
+      print("Message updated for group ID $groupId and note ID $noteId");
     } else {
-      // If no note is found for the given groupId
-      throw Exception("No notes found for group ID $groupId");
+      // If no note is found matching both groupId and noteId
+      throw Exception("No notes found for group ID $groupId and note ID $noteId");
     }
   }
+
   Future<List<Map<int, String>>> getNamesByIds(List<int> ids) async {
     List<Map<int, String>> result = [];
     for (int id in ids) {
@@ -169,6 +169,48 @@ class Mock_API extends Mock_Backend{
     });
 
     print("Note added successfully: $message");
+    print(Mock_Backend.notes);
   }
+  Future<void> deleteNoteById(int noteId, int groupId) async {
+    // Find the index of the note using both noteId and groupId
+    final noteIndex = Mock_Backend.notes.indexWhere(
+            (note) => note['id'] == noteId && note['group_id'] == groupId);
+
+    if (noteIndex != -1) {
+      // If the note exists, remove it
+      Mock_Backend.notes.removeAt(noteIndex);
+
+      // Provide feedback or log the action
+      print("Note with ID $noteId from group ID $groupId has been deleted.");
+    } else {
+      // If no matching note is found, throw an exception
+      throw Exception("No note found with ID $noteId in group ID $groupId.");
+    }
+  }
+  Future<bool> isUserAuthorized(int userId, int groupId, int noteId) async {
+    final note = Mock_Backend.notes.firstWhere(
+          (note) => note['id'] == noteId && note['group_id'] == groupId,
+      orElse: () => {},
+    );
+    if (note.isEmpty) {
+      throw Exception("Note not found for the given ID and group.");
+    }
+    if (note['editors'].contains(userId)) {
+      return true; // User is authorized as an editor
+    }
+    final group = Mock_Backend.groups.firstWhere(
+          (group) => group['id'] == groupId,
+      orElse: () => {},
+    );
+
+    if (group.isEmpty) {
+      throw Exception("Group not found for the given ID.");
+    }
+    if (group['admin'].contains(userId)) {
+      return true; // User is authorized as an admin
+    }
+    return false;
+  }
+
 
 }

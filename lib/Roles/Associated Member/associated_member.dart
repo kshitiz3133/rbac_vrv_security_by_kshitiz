@@ -1,15 +1,47 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/members.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/new_note.dart';
 
 import '../../UI Components/notes.dart';
 import '../../UI Components/notes_expanded.dart';
+import '../../current_user_data.dart';
 
-class AssociatedMember extends StatelessWidget {
-  const AssociatedMember({Key? key}) : super(key: key);
+class AssociatedMember extends StatefulWidget {
+  final int groupId;
+  const AssociatedMember({Key? key, required this.groupId}) : super(key: key);
+
+  @override
+  State<AssociatedMember> createState() => _AssociatedMemberState();
+}
+
+class _AssociatedMemberState extends State<AssociatedMember> {
+  late List<Map<String, dynamic>> groups=[];
+  Mock_API mock_api= Mock_API();
+  static int gid=0;
+  int reloadKey=0;
+  void reload(){
+    setState(() {
+      reloadKey++;
+      print('reloaded');
+    });
+  }
+  Future<void> getusergroups() async {
+    var data=await mock_api.getUserGroups(CurrentUser.userdata['id']);
+    setState(() {
+      groups=data;
+    });
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    gid=widget.groupId;
+    getusergroups();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: Column(
@@ -25,7 +57,7 @@ class AssociatedMember extends StatelessWidget {
                     barrierDismissible: true,
                     builder: (context) => Dialog(
                       backgroundColor: Color(0xffCDC6F2),
-                      child: AnimatedNewNotice(),
+                      child: AnimatedNewNotice(groupId: gid,reload:reload),
                     ),
                   );
                 });
@@ -55,31 +87,34 @@ class AssociatedMember extends StatelessWidget {
         ],
       ),
       drawer: Drawer(
-        child: ListView(
+        child: ListView.builder(
           padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.purple.shade100,
-              ),
-              child: Text("User"),
-            ),
-            ListTile(
-              title: const Text('Group 1'),
-              subtitle: Text('role'),
-              onTap: () {
-              },
-            ),
-            ListTile(
-              title: const Text('Group 2'),
-              subtitle: Text('role'),
-              onTap: () {
-              },
-            ),
-          ],
+          itemCount: CurrentUser.userdata['groups'].length + 1, // Include one extra for the header
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              // Drawer Header
+              return DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade100,
+                ),
+                child: Text("User"),
+              );
+            } else {
+              // ListTile for groups
+              final group = groups[index - 1]; // Adjust for the header
+              return ListTile(
+                title: Text(group['groupName']),
+                subtitle: Text(group['role']),
+                onTap: () {
+                  print("Selected Group: ");
+                  // Add navigation or actions here
+                },
+              );
+            }
+          },
         ),
       ),
-      appBar: AppBar(
+        appBar: AppBar(
         title: Text("Your Notice Board"),
         actions: [
           Icon(
@@ -153,7 +188,7 @@ class AssociatedMember extends StatelessWidget {
           ),
         ],
       ),
-      body: GroupNotes(groupId: 1,),
+      body: GroupNotes(key: ValueKey(reloadKey),groupId: gid),
     );
   }
 }

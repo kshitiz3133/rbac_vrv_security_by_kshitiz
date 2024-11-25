@@ -14,13 +14,15 @@ class GroupNotes extends StatefulWidget {
 
 class _GroupNotesState extends State<GroupNotes> {
   Mock_API mock_api = Mock_API();
-  late List<Map<String,dynamic>> notesofgroup;
+  late List<Map<String,dynamic>> notesofgroup=[];
+  int reloadKey=0;
 
   void getlist()async {
     var data = await mock_api.getNotesByGroupId(widget.groupId);
     setState(() {
       notesofgroup = data;
     });
+    print("notes of groups: ${notesofgroup}");
   }
   @override
   void initState() {
@@ -29,6 +31,9 @@ class _GroupNotesState extends State<GroupNotes> {
     getlist();
   }
   void reloadnotes(){
+    setState(() {
+      reloadKey++;
+    });
     getlist();
     print("reloaded");
   }
@@ -43,7 +48,7 @@ class _GroupNotesState extends State<GroupNotes> {
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
           ),
-          itemCount: 1,
+          itemCount: notesofgroup.length,
           itemBuilder: (BuildContext context, int index) {
             var _overlaycontroller = OverlayPortalController();
             return GestureDetector(
@@ -70,7 +75,7 @@ class _GroupNotesState extends State<GroupNotes> {
                     ),
                   );
                 },
-                child: buildNotice(notesofgroup: notesofgroup,index: index),
+                child: buildNotice(key: ValueKey(reloadKey),notesofgroup: notesofgroup,index: index),
               ),
             );
           },
