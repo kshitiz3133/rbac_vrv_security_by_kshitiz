@@ -37,10 +37,12 @@ This project is a Flutter-based Role-Based Access Control (RBAC) application des
 
    ```bash
    git clone https://github.com/yourusername/rbac-vrv-security.git
-   cd rbac-vrv-security```
+   cd rbac-vrv-security
 
 2. Install dependencies:
 
-   ```flutter pub get
+   ```bash
+   flutter pub get
 3. Run the app:
+   ```bash
    flutter run
