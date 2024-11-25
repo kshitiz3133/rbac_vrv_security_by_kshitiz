@@ -19,12 +19,49 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
   Mock_API mock_api = Mock_API();
   late List<Map<int,String>> members=[];
   late List<String> names=[];
+  late List<Map<String, dynamic>> nonGroupMembers = [];
+  List<int> selectedMemberIds = [];
+
+
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    return Mock_Backend.users;
+  }
+  Future<List<Map<String, dynamic>>> getNonGroupMembers() async {
+    // Get all users from the backend
+    List<Map<String, dynamic>> allUsers = await getAllUsers();
+
+    // Extract the IDs of members in the group
+    List<int> memberIds = members.map((member) => member.keys.first).toList();
+
+    // Filter users who are not in the group
+    List<Map<String, dynamic>> nonGroupUsers = allUsers.where((user) {
+      return !memberIds.contains(user['id']);
+    }).toList();
+
+    return nonGroupUsers;
+  }
+  Future<void> fetchNonGroupMembers() async {
+    try {
+      List<Map<String, dynamic>> result = await getNonGroupMembers();
+      setState(() {
+        nonGroupMembers = result;
+      });
+      print("members: $members");
+      print("Non-group members: $nonGroupMembers");
+    } catch (error) {
+      print("Error fetching non-group members: $error");
+    }
+  }
+
+
+
 
   Future<void> fetchmembers() async {
     var data= await mock_api.getMembersFromGroup(widget.groupId);
     var mem= await mock_api.getNamesByIds(data);
     setState(() {
       members=mem;
+      fetchNonGroupMembers();
       getNamesSeparatedByCommas();
     });
   }
@@ -73,15 +110,77 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
                 width: 400,
                 child: Padding(
                   padding: const EdgeInsets.all(15.0),
-                  child: Column(
+                  child:Column(
                     children: [
-                      Text("Add Member"),
-                      SizedBox(height: 10,),
-                      Flexible(child: TextField()),
-                      SizedBox(height: 40,),
-                      ElevatedButton(onPressed: (){}, child: Text("Add")),
+                      Text(
+                        "Add Member",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      Expanded(
+                        child: nonGroupMembers.isEmpty
+                            ? Center(child: Text("No members available to add."))
+                            : ListView.builder(
+                          itemCount: nonGroupMembers.length,
+                          itemBuilder: (context, index) {
+                            final member = nonGroupMembers[index];
+                            final isSelected = selectedMemberIds.contains(member['id']);
+
+                            return ListTile(
+                              title: Text(member['name']),
+                              subtitle: Text(member['email']),
+                              trailing: Checkbox(
+                                value: isSelected,
+                                onChanged: (value) {
+                                  setState(() {
+                                    if (value == true) {
+                                      selectedMemberIds.add(member['id']);
+                                    } else {
+                                      selectedMemberIds.remove(member['id']);
+                                    }
+                                  });
+                                },
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    selectedMemberIds.remove(member['id']);
+                                  } else {
+                                    selectedMemberIds.add(member['id']);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          print("members from add: $selectedMemberIds");
+                          // Call API to add selected members to the group
+                          for (int memberId in selectedMemberIds) {
+                            await mock_api.addGroupMember(widget.groupId, memberId);
+                          }
+
+                          // Refresh the member lists
+                          await fetchmembers();
+                          await fetchNonGroupMembers();
+
+                          // Clear selected members
+                          setState(() {
+                            selectedMemberIds.clear();
+                          });
+                          print("all users: ${Mock_Backend.users}");
+
+                          // Optionally close the overlay
+                          _overlaycontroller.toggle();
+                        },
+                        child: Text("Add (${selectedMemberIds.length})"),
+                      ),
                     ],
-                  ),
+                  )
+
                 ),
               ),
             ),

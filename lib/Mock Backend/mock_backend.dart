@@ -30,20 +30,37 @@ class Mock_Backend{
 }
 
 class Mock_API extends Mock_Backend{
-  void addUser(int id,String name,String email,String role,String status){
+  Future<void> addUser(String name, String email, String role, String status) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    bool userExists = Mock_Backend.users.any((user) => user['email'] == email);
+
+    if (userExists) {
+      print("User already exists with Email $email");
+      throw Exception("User already exists with Email $email");
+    }
+    int newId = Mock_Backend.users.isNotEmpty
+        ? Mock_Backend.users.last['id'] + 1
+        : 1;
     Mock_Backend.users.add({
-      'id':id,
-      'name':name,
-      'email':email,
+      'id': newId,
+      'name': name,
+      'email': email,
       'role': role,
-    'status': status
+      'status': status,
+      'groups': [],
     });
+
+    print("User added successfully with ID $newId: $name");
   }
+
+
   Future<void> addGroupMember(int groupId, int userId) async {
     await Future.delayed(Duration(milliseconds: 500));
     final groupIndex = Mock_Backend.groups.indexWhere((group) => group['id'] == groupId);
+    final userIndex = Mock_Backend.users.indexWhere((user) => user['id'] == userId);
     if (groupIndex != -1 && !Mock_Backend.groups[groupIndex]['members'].contains(userId)) {
       Mock_Backend.groups[groupIndex]['members'].add(userId);
+      Mock_Backend.users[userIndex]['groups'].add(groupId);
     } else {
       throw Exception('User already in the group or group not found');
     }

@@ -76,7 +76,7 @@ class _AssociatedMemberState extends State<AssociatedMember> {
                     barrierDismissible: true,
                     builder: (context) => Dialog(
                       backgroundColor: Color(0xffCDC6F2),
-                      child: MembersInfo(groupId: 1,),
+                      child: MembersInfo(groupId: gid,),
                     ),
                   );
                 });

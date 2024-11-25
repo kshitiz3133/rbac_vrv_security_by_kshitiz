@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 
+import '../../UI Components/members.dart';
+
 class ITAdmin extends StatefulWidget {
   const ITAdmin({Key? key}) : super(key: key);
 
@@ -13,6 +15,13 @@ class ITAdmin extends StatefulWidget {
 
 class _ITAdminState extends State<ITAdmin> {
   bool flag = true;
+  int reloadKey=0;
+  void reload(){
+    setState(() {
+      reloadKey++;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +58,7 @@ class _ITAdminState extends State<ITAdmin> {
           ],
         ),
       ),
-      body: flag ? UserList() : GroupsList(),
+      body: flag ? UserList(key: ValueKey(reloadKey),) : GroupsList(key: ValueKey(reloadKey),reload: reload,),
     );
   }
 }
@@ -63,15 +72,18 @@ class UserList extends StatefulWidget {
 
 class _UserListState extends State<UserList> {
   Mock_Backend mockdb = Mock_Backend();
-  Mock_API mock_api=Mock_API();
+  Mock_API mock_api = Mock_API();
   List<Map<String, dynamic>> allusers = [];
   bool isLoading = true;
+  TextEditingController name=TextEditingController();
+  TextEditingController email=TextEditingController();
+  TextEditingController role=TextEditingController();
 
   Future<List<Map<String, dynamic>>> getAllUsers() async {
-    await Future.delayed(Duration(seconds: 1)); // Simulate network delay
     return Mock_Backend.users;
   }
-  void fetch(){
+
+  void fetch() {
     getAllUsers().then((users) {
       setState(() {
         allusers = users;
@@ -79,17 +91,23 @@ class _UserListState extends State<UserList> {
       });
     });
   }
-  void removeuser(int id,String name,String role,String status,List<dynamic> groups) async {
+
+  Future<void> adduser(String name, String email, String role, String status) async{
+    await mock_api.addUser(name, email, role, status);
+    fetch();
+  }
+
+  void removeuser(int id, String name, String role, String status,
+      List<dynamic> groups) async {
     try {
-      await mock_api.removeFromAllGroups(groups,id);
-      await mock_api.removeUser(id,name,role,status,groups);
+      await mock_api.removeFromAllGroups(groups, id);
+      await mock_api.removeUser(id, name, role, status, groups);
       setState(() {
         fetch();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Removed User')),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to remove user: $e')),
@@ -118,53 +136,62 @@ class _UserListState extends State<UserList> {
               children: [
                 Text("Name"),
                 Text("Status"),
-                ElevatedButton(onPressed: (){
-                  return WidgetsBinding.instance.addPostFrameCallback((_) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        child: Container(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Text("Name: "),
-                                    Flexible(child: TextField()),
-                                  ],
-                                ),
-                                SizedBox(height: 10,),
-                                Row(
-                                  children: [
-                                    Text("Email: "),
-                                    Flexible(child: TextField()),
-                                  ],
-                                ),
-                                SizedBox(height: 10,),
-                                Row(
-                                  children: [
-                                    Text("Role: "),
-                                    Flexible(child: TextField()),
-                                  ],
-                                ),
-                                SizedBox(height: 10,),
-                                Row(
-                                  children: [
-                                    Text("Add in Groups: "),
-                                    Flexible(child: TextField()),
-                                  ],
-                                ),
-                                SizedBox(height: 30,),
-                                ElevatedButton(onPressed: (){Navigator.pop(context);}, child: Text("Done")),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )
-                    );
-                  });
-                }, child:Text("Add a user")),
+                ElevatedButton(
+                    onPressed: () {
+                      return WidgetsBinding.instance.addPostFrameCallback((_) {
+                        showDialog(
+                            context: context,
+                            builder: (context) => Dialog(
+                                  child: Container(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20.0),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text("Name: "),
+                                              Flexible(child: TextField(controller: name,)),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text("Email: "),
+                                              Flexible(child: TextField(controller: email,)),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text("Role: "),
+                                              Flexible(child: TextField(controller: role,)),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          SizedBox(
+                                            height: 30,
+                                          ),
+                                          ElevatedButton(
+                                              onPressed: () async {
+                                                await adduser(name.text, email.text, role.text, "Active");
+                                                Navigator.pop(context);
+                                                print(Mock_Backend.users);
+                                              },
+                                              child: Text("Done")),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ));
+                      });
+                    },
+                    child: Text("Add a user")),
               ],
             ),
           ),
@@ -176,40 +203,79 @@ class _UserListState extends State<UserList> {
                     return Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: InkWell(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>Scaffold(appBar: AppBar(title: Text(allusers[index]['name']),),body: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                children: allusers[index] .entries.map((entry) {
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text(entry.key, style: TextStyle(fontWeight: FontWeight.bold)),
-                                          Text(entry.value.toString()),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),),
-                              SizedBox(height: 30,),
-                              ElevatedButton(onPressed: (){removeuser(allusers[index]['id'],allusers[index]['name'],allusers[index]['role'],allusers[index]['status'],allusers[index]['groups']); Navigator.pop(context);}, child: Text("Remove")),
-                            ],
-                          ),
-                          )
-                          )
-                          );
-
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => Scaffold(
+                                        appBar: AppBar(
+                                          title: Text(allusers[index]['name']),
+                                        ),
+                                        body: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Row(
+                                              children: allusers[index]
+                                                  .entries
+                                                  .map((entry) {
+                                                return Expanded(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(entry.key,
+                                                            style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold)),
+                                                        Text(entry.value
+                                                            .toString()),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ),
+                                            SizedBox(
+                                              height: 30,
+                                            ),
+                                            ElevatedButton(
+                                                onPressed: () {
+                                                  removeuser(
+                                                      allusers[index]['id'],
+                                                      allusers[index]['name'],
+                                                      allusers[index]['role'],
+                                                      allusers[index]['status'],
+                                                      allusers[index]
+                                                          ['groups']);
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Text("Remove")),
+                                          ],
+                                        ),
+                                      )));
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(allusers[index]['name']),
                             Text(allusers[index]['status']),
-                            ElevatedButton(onPressed: (){removeuser(allusers[index]['id'],allusers[index]['name'],allusers[index]['role'],allusers[index]['status'],allusers[index]['groups']);}, child: Text("Remove")),
+                            ElevatedButton(
+                                onPressed: () {
+                                  removeuser(
+                                      allusers[index]['id'],
+                                      allusers[index]['name'],
+                                      allusers[index]['role'],
+                                      allusers[index]['status'],
+                                      allusers[index]['groups']);
+                                },
+                                child: Text("Remove")),
                           ],
                         ),
                       ),
@@ -224,7 +290,8 @@ class _UserListState extends State<UserList> {
 }
 
 class GroupsList extends StatefulWidget {
-  const GroupsList({Key? key}) : super(key: key);
+  final VoidCallback reload;
+  const GroupsList({Key? key, required this.reload}) : super(key: key);
 
   @override
   State<GroupsList> createState() => _GroupsListState();
@@ -262,8 +329,38 @@ class _GroupsListState extends State<GroupsList> {
             itemCount: allgroups.length,
             itemBuilder: (context, index) {
               return InkWell(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>Scaffold(appBar: AppBar(title: Text(allgroups[index]['name']),),body: GroupNotes(groupId: allgroups[index]['id']))));
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            floatingActionButton: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: FloatingActionButton(
+                                onPressed: () {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: true,
+                                      builder: (context) => Dialog(
+                                        backgroundColor: Color(0xffCDC6F2),
+                                        child: MembersInfo(groupId: allgroups[index]['id'],),
+                                      ),
+                                    );
+                                  });
+                                },
+                                child: Icon(Icons.people),
+                              ),
+                            ),
+                              appBar: AppBar(
+                                leading: IconButton(onPressed: (){
+                                  Navigator.pop(context);
+                                  widget.reload();
+                                },icon: Icon(Icons.arrow_back),),
+                                title: Text(allgroups[index]['name'] + " Group's Notes"),
+                              ),
+                              body: GroupNotes(
+                                  groupId: allgroups[index]['id']))));
                 },
                 child: ListTile(
                   title: Row(
