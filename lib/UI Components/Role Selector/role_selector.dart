@@ -65,6 +65,7 @@ class _RoleSelectorState extends State<RoleSelector> {
     } else {
       return Scaffold(
         appBar: AppBar(
+          leading: Text(""),
           title: Text("Role Selector"),
           centerTitle: true,
         ),
