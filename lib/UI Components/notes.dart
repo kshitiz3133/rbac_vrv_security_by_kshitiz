@@ -46,7 +46,7 @@ class _buildNoticeState extends State<buildNotice> {
       padding: const EdgeInsets.all(8.0),
       child: Container(
         height: 170.h,
-        width: 170.w,
+        width: 0.1.sw,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: Color(0xffCDC6F2),

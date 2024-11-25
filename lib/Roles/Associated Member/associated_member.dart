@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/members.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/new_note.dart';
 
+import '../../UI Components/Role Selector/role_selector.dart';
 import '../../UI Components/notes.dart';
 import '../../UI Components/notes_expanded.dart';
 import '../../current_user_data.dart';
@@ -31,15 +33,20 @@ class _AssociatedMemberState extends State<AssociatedMember> {
   }
   Future<void> getusergroups() async {
     var data=await mock_api.getUserGroups(CurrentUser.userdata['id']);
+    print("groups: $data");
+
     setState(() {
       groups=data;
     });
+  }
+  void getgroups() async{
+    await getusergroups();
   }
   @override
   void initState() {
     // TODO: implement initState
     gid=widget.groupId;
-    getusergroups();
+    getgroups();
   }
 
   Widget build(BuildContext context) {
@@ -97,7 +104,7 @@ class _AssociatedMemberState extends State<AssociatedMember> {
                 decoration: BoxDecoration(
                   color: Colors.purple.shade100,
                 ),
-                child: Text("User"),
+                child: Text(CurrentUser.userdata['role']),
               );
             } else {
               // ListTile for groups
@@ -106,8 +113,10 @@ class _AssociatedMemberState extends State<AssociatedMember> {
                 title: Text(group['groupName']),
                 subtitle: Text(group['role']),
                 onTap: () {
-                  print("Selected Group: ");
-                  // Add navigation or actions here
+                  setState(() {
+                    gid=group['groupId'];
+                    reload();
+                  });
                 },
               );
             }
@@ -117,21 +126,81 @@ class _AssociatedMemberState extends State<AssociatedMember> {
         appBar: AppBar(
         title: Text("Your Notice Board"),
         actions: [
-          Icon(
-            (Icons.notifications),
-            size: 28,
-          ),
-          SizedBox(
-            width: 10,
-          ),
           PopupMenuButton<int>(
             offset: Offset(0, 55),
             icon: CircleAvatar(
               radius: 20,
+              child: Icon(Icons.person),
             ),
             onSelected: (value) {
               if (value == 0) {
                 print("prof");
+                showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                        child:Container(
+                          height: 0.4.sh,
+                          width: 0.3.sw, // 80% of the screen width
+                          padding: EdgeInsets.all(20.r),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: Colors.deepPurple, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.deepPurple.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 6,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'User Information',
+                                style: TextStyle(
+                                  fontSize: 24.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                              Divider(color: Colors.deepPurple, thickness: 1.5),
+                              ...CurrentUser.userdata.entries.map((entry) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 5.h),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${entry.key}: ',
+                                        style: TextStyle(
+                                          fontSize: 20.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          entry.value.toString(),
+                                          style: TextStyle(
+                                            fontSize: 20.sp,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                    )
+                );
               } else if (value == 1) {
                 print("Logout clicked");
                 showDialog(
@@ -148,8 +217,10 @@ class _AssociatedMemberState extends State<AssociatedMember> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   children: [
-                                    ElevatedButton(onPressed: (){}, child: Text("Yes")),
-                                    ElevatedButton(onPressed: (){}, child: Text("No")),
+                                    ElevatedButton(onPressed: (){
+                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>RoleSelector()));
+                                    }, child: Text("Yes")),
+                                    ElevatedButton(onPressed: (){Navigator.pop(context);}, child: Text("No")),
                                   ],
                                 )
                               ],
@@ -167,7 +238,7 @@ class _AssociatedMemberState extends State<AssociatedMember> {
                   children: [
                     Icon(Icons.person),
                     SizedBox(width: 8),
-                    Text("Profile"),
+                    Text("User Info"),
                   ],
                 ),
               ),

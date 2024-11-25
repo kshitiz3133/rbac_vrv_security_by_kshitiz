@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
+import 'package:rbac_vrv_security_by_kshitiz/current_user_data.dart';
 
 class MembersInfo extends StatefulWidget {
   final groupId;
@@ -21,8 +23,16 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
   late List<String> names=[];
   late List<Map<String, dynamic>> nonGroupMembers = [];
   List<int> selectedMemberIds = [];
+  final formattedDate = DateFormat('dd MMM yyyy').format(DateTime.now());
 
 
+  Future<bool> checkremoveuseraccess() async {
+    var data = await mock_api.getGroupRole(widget.groupId, CurrentUser.userdata['id']);
+    if(data=='Admin'||CurrentUser.userdata['role']=='ITAdmin'){
+      return true;
+    }
+    return false;
+  }
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     return Mock_Backend.users;
   }
@@ -157,24 +167,30 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
                       SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () async {
-                          print("members from add: $selectedMemberIds");
-                          // Call API to add selected members to the group
-                          for (int memberId in selectedMemberIds) {
-                            await mock_api.addGroupMember(widget.groupId, memberId);
+                          if(await checkremoveuseraccess()){
+                            print("members from add: $selectedMemberIds");
+                            // Call API to add selected members to the group
+                            for (int memberId in selectedMemberIds) {
+                              await mock_api.addGroupMember(widget.groupId, memberId);
+                            }
+
+                            // Refresh the member lists
+                            await fetchmembers();
+                            await fetchNonGroupMembers();
+
+                            // Clear selected members
+                            setState(() {
+                              selectedMemberIds.clear();
+                            });
+                            print("all users: ${Mock_Backend.users}");
+
+                            // Optionally close the overlay
+                            _overlaycontroller.toggle();
                           }
-
-                          // Refresh the member lists
-                          await fetchmembers();
-                          await fetchNonGroupMembers();
-
-                          // Clear selected members
-                          setState(() {
-                            selectedMemberIds.clear();
-                          });
-                          print("all users: ${Mock_Backend.users}");
-
-                          // Optionally close the overlay
-                          _overlaycontroller.toggle();
+                          else{
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("You don't have the access for this action")),);
+                          }
                         },
                         child: Text("Add (${selectedMemberIds.length})"),
                       ),
@@ -237,28 +253,67 @@ class _MembersInfoState extends State<MembersInfo> with SingleTickerProviderStat
                       SizedBox(height: 10,),
                       Container(
                         color: Colors.transparent,
-                          height: 210,
-                          child: GridView.builder(
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                mainAxisExtent: 100,
-                                crossAxisCount: 6,
-                              ),
-                              itemCount: members.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return Card(
-                                  color: Colors.deepPurple ,
-                                  child: Center(child: Text(names[index])),
-                                );
-                              }
+                        height: 210,
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            mainAxisExtent: 100,
+                            crossAxisCount: 6,
                           ),
-                      ),
+                          itemCount: members.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final memberId = members[index].keys.first;
+                            final memberName = members[index].values.first;
+
+                            return Card(
+                              color: Colors.deepPurple,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    memberName,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 8),
+                                  IconButton(
+                                    icon: Icon(Icons.remove, color: Colors.red),
+                                    onPressed: () async {
+                                      // Remove member using the Mock API
+                                      if(await checkremoveuseraccess()){
+                                        await mock_api.removeGroupMember(widget.groupId, memberId);
+
+                                        // Update the member lists
+                                        await fetchmembers();
+                                        await fetchNonGroupMembers();
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('$memberName removed from group.')),
+                                        );
+                                      }
+                                      else{
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text("You don't have the access for this action")),);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      )
                     ],
                   ),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('19 May 24',style: TextStyle(color: Colors.black.withOpacity(0.2)),),
-                      IconButton(onPressed: (){
-                        _overlaycontroller.toggle();
+                      Text(formattedDate,style: TextStyle(color: Colors.black.withOpacity(0.2)),),
+                      IconButton(onPressed: ()async{
+                        if(await checkremoveuseraccess()){
+                          _overlaycontroller.toggle();
+                        }
+                        else{
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("You don't have the access for this action")),);
+                        }
                       }, icon: Row(
                         children: [
                           Container(child: Icon(Icons.add)),

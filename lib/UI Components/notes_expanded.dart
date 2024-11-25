@@ -37,6 +37,74 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
     });
   }
 
+
+
+  Future<void> showAddEditorDialog(BuildContext context) async {
+    // Fetch group members who are not editors
+    final groupMembers = await mock_api.getMembersFromGroup(widget.note['group_id']);
+    final currentEditors = List<int>.from(widget.note['editors']);
+    final nonEditors = groupMembers.where((id) => !currentEditors.contains(id)).toList();
+
+    if (nonEditors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No eligible members to add as editors.')),
+      );
+      return;
+    }
+
+    // Show a dialog with non-editor members
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Editors'),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: nonEditors.length,
+              itemBuilder: (context, index) {
+                final memberId = nonEditors[index];
+                final memberName = Mock_Backend.users.firstWhere((user) => user['id'] == memberId)['name'];
+
+                return ListTile(
+                  title: Text(memberName),
+                  trailing: IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () async {
+                      await mock_api.addEditorToNote(widget.note['id'], widget.note['group_id'], memberId,);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('$memberName added as an editor.')),
+                      );
+                      widget.reload(); // Refresh the UI
+                      getNamesById();
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  Future<bool> checkaddeditoraccess() async{
+    bool check= await mock_api.isUserAuthorizedtoEdit(CurrentUser.userdata['id'], widget.note['group_id'], widget.note['id']);
+    if(check) {
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
   Future<bool> checkeditaccess() async{
     bool check= await mock_api.isUserAuthorized(CurrentUser.userdata['id'], widget.note['group_id'], widget.note['id']);
     if(check) {
@@ -46,6 +114,62 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
       return false;
     }
   }
+
+  Future<void> showViewAllEditorsDialog(BuildContext context) async {
+    final currentEditors = List<int>.from(widget.note['editors']);
+
+    if (currentEditors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No editors to display.')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Current Editors'),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: currentEditors.length,
+              itemBuilder: (context, index) {
+                final editorId = currentEditors[index];
+                final editorName = Mock_Backend.users.firstWhere(
+                      (user) => user['id'] == editorId,
+                )['name'];
+
+                return ListTile(
+                  title: Text(editorName),
+                  trailing: IconButton(
+                    icon: Icon(Icons.remove, color: Colors.red),
+                    onPressed: () async {
+                      await mock_api.removeEditorFromNote(widget.note['id'], widget.note['group_id'], editorId);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('$editorName removed as an editor.')),
+                      );
+                      widget.reload(); // Refresh the UI
+                      getNamesById();
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   void initState() {
@@ -106,13 +230,26 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                       ),
                     ),
                     SizedBox(
-                        width: 316.w,
-                        child: Text(
-                          result,
-                          textScaler: TextScaler.linear(1),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 25.sp),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              result,
+                              textScaler: TextScaler.linear(1),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 25.sp),
+                            ),
+                            TextButton(onPressed: () async{
+                              if (await checkaddeditoraccess()) {
+                                await showViewAllEditorsDialog(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Edit access not granted')),
+                                );
+                              }
+                            }, child: Text("View All"))
+                          ],
                         )),
                     SizedBox(height: 10,),
 
@@ -170,18 +307,36 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                             },icon:Icon(Icons.check)),
                         ]
                     )
-                        :IconButton(onPressed: ()async{
-                          if(await checkeditaccess()){
-                            setState(() {
-                              edit=!edit;
-                            });
-                          }
-                          else{
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Edit access not granted')),
-                            );
-                          }
-                    }, icon: Icon(Icons.edit))
+                        :Row(
+                          children: [
+                            IconButton(onPressed: ()async{
+                              if(await checkeditaccess()){
+                                setState(() {
+                                  edit=!edit;
+                                });
+                              }
+                              else{
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Edit access not granted')),
+                                );
+                              }
+                              }, icon: Icon(Icons.edit)),
+                            IconButton(onPressed: ()async{
+                              if (await checkaddeditoraccess()) {
+                                await showAddEditorDialog(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Edit access not granted')),
+                                );
+                              }
+                            }, icon: Row(
+                              children: [
+                                Icon(Icons.add),
+                                Icon(Icons.people),
+                              ],
+                            )),
+                          ],
+                        )
                   ],
                 )
               ],

@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
 import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 import 'package:rbac_vrv_security_by_kshitiz/current_user_data.dart';
+import 'package:intl/intl.dart';
+
 class AnimatedNewNotice extends StatefulWidget {
   final int groupId;
   final VoidCallback reload;
@@ -19,6 +21,7 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
   late Animation<double> _animation;
   TextEditingController textController=TextEditingController();
   Mock_API mock_api = Mock_API();
+  final formattedDate = DateFormat('dd MMM yyyy').format(DateTime.now());
 
   void newnote(int groupId, List<int> editors, String date, String message)async{
     await mock_api.addNote(groupId,editors,date,message);
@@ -126,12 +129,12 @@ class _AnimatedNewNoticeState extends State<AnimatedNewNotice>
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('19 May 24',style: TextStyle(color: Colors.black.withOpacity(0.2)),),
+                    Text(formattedDate,style: TextStyle(color: Colors.black.withOpacity(0.2)),),
                     Row(
                       children: [
                         IconButton(onPressed: (){
                           GroupNotes gn = GroupNotes(groupId: widget.groupId);
-                          newnote(widget.groupId, [CurrentUser.userdata['id']], "19 May 2024", textController.text);
+                          newnote(widget.groupId, [CurrentUser.userdata['id']], formattedDate, textController.text);
                           widget.reload();
                           Navigator.pop(context);
                         }, icon: Icon(Icons.check)),

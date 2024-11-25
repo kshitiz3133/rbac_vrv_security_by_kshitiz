@@ -1,33 +1,88 @@
-class Mock_Backend{
+class Mock_Backend {
   static List<Map<String, dynamic>> users = [
-    {'id': 1, 'name': 'John Doe','email': 'john.doe@example.com', 'role': 'ITAdmin', 'status': 'Active','groups':[1]},
-    {'id': 2, 'name': 'Jane Smith','email': 'jane.smith@example.com', 'role': 'User','status': 'Active','groups':[1,2]},
-    {'id': 3, 'name': 'Alice Brown','email': 'alice.brown@example.com', 'role': 'User', 'status': 'Active','groups':[]},
+    {'id': 1, 'name': 'John Doe', 'email': 'john.doe@example.com', 'role': 'ITAdmin', 'status': 'Active', 'groups': []},
+    {'id': 2, 'name': 'Jane Smith', 'email': 'jane.smith@example.com', 'role': 'User', 'status': 'Active', 'groups': [1, 2]},
+    {'id': 3, 'name': 'Alice Brown', 'email': 'alice.brown@example.com', 'role': 'User', 'status': 'Active', 'groups': [4]},
+    {'id': 4, 'name': 'Mark Lee', 'email': 'mark.lee@example.com', 'role': 'User', 'status': 'Active', 'groups': [2,4]},
+    {'id': 5, 'name': 'Emma Watson', 'email': 'emma.watson@example.com', 'role': 'User', 'status': 'Inactive', 'groups': [3]},
+    {'id': 6, 'name': 'Sophia Turner', 'email': 'sophia.turner@example.com', 'role': 'User', 'status': 'Active', 'groups': [4]},
+    {'id': 7, 'name': 'Oliver White', 'email': 'oliver.white@example.com', 'role': 'ITAdmin', 'status': 'Active', 'groups': []},
+    {'id': 8, 'name': 'Liam Johnson', 'email': 'liam.johnson@example.com', 'role': 'User', 'status': 'Active', 'groups': [4]},
   ];
+
   static List<Map<String, dynamic>> groups = [
     {
       'id': 1,
       'name': 'Developers',
-      'admin': [1],
-      'members': [1, 2]
+      'admin': [2],
+      'members': [2],
     },
     {
       'id': 2,
       'name': 'Managers',
       'admin': [2],
-      'members': [2],
+      'members': [2, 4],
+    },
+    {
+      'id': 3,
+      'name': 'Designers',
+      'admin': [5],
+      'members': [5],
+    },
+    {
+      'id': 4,
+      'name': 'Support Team',
+      'admin': [4],
+      'members': [3,4,6,8],
     },
   ];
-  static List<Map<String, dynamic>> notes=[
+
+  static List<Map<String, dynamic>> notes = [
     {
-      'id':1,
-      'group_id':1,
-      'editors':[1],
-      'date':"19 May 2024",
-      'message':"I am feeling good",
-    }
+      'id': 1,
+      'group_id': 1,
+      'editors': [2],
+      'date': "19 May 2024",
+      'message': "I am feeling good",
+    },
+    {
+      'id': 2,
+      'group_id': 2,
+      'editors': [2],
+      'date': "21 May 2024",
+      'message': "Manager meeting scheduled for 22 May.",
+    },
+    {
+      'id': 3,
+      'group_id': 1,
+      'editors': [2],
+      'date': "22 May 2024",
+      'message': "Completed the project sprint for week 4.",
+    },
+    {
+      'id': 4,
+      'group_id': 3,
+      'editors': [5],
+      'date': "23 May 2024",
+      'message': "Design team will review the latest mockups tomorrow.",
+    },
+    {
+      'id': 5,
+      'group_id': 4,
+      'editors': [4],
+      'date': "24 May 2024",
+      'message': "Support team training scheduled on 26 May.",
+    },
+    {
+      'id': 6,
+      'group_id': 4,
+      'editors': [6],
+      'date': "23 May 2024",
+      'message': "New Note Testing.",
+    },
   ];
 }
+
 
 class Mock_API extends Mock_Backend{
   Future<void> addUser(String name, String email, String role, String status) async {
@@ -109,9 +164,11 @@ class Mock_API extends Mock_Backend{
   }
   Future<void> removeGroupMember(int groupId, int userId) async {
     final groupIndex = Mock_Backend.groups.indexWhere((group) => group['id'] == groupId);
+    final userIndex = Mock_Backend.users.indexWhere((user) => user['id']==userId);
     if (groupIndex != -1) {
       Mock_Backend.groups[groupIndex]['members'].remove(userId);
       Mock_Backend.groups[groupIndex]['admin'].remove(userId);
+      Mock_Backend.users[userIndex]['groups'].remove(groupId);
       print("After removing: ${Mock_Backend.groups}");
     } else {
       throw Exception('Group not found');
@@ -228,6 +285,68 @@ class Mock_API extends Mock_Backend{
     }
     return false;
   }
+
+  Future<bool> isUserAuthorizedtoEdit(int userId, int groupId, int noteId) async {
+    final note = Mock_Backend.notes.firstWhere(
+          (note) => note['id'] == noteId && note['group_id'] == groupId,
+      orElse: () => {},
+    );
+    if (note.isEmpty) {
+      throw Exception("Note not found for the given ID and group.");
+    }
+    if (note['editors'][0]==userId) {
+      return true; // User is authorized as an editor
+    }
+    final user=Mock_Backend.users.firstWhere((user) => user['id']==userId);
+    if(user['role']=='ITAdmin'){
+      return true;
+    }
+    return false;
+  }
+  Future<void> addEditorToNote(int noteId,int groupId,int userId,) async {
+    final noteIndex = Mock_Backend.notes.indexWhere(
+          (note) => note['id'] == noteId && note['group_id'] == groupId,
+    );
+
+    if (noteIndex == -1) {
+      throw Exception("Note not found for the given ID and group.");
+    }
+
+    // Check if the user exists
+    final userIndex = Mock_Backend.users.indexWhere((user) => user['id'] == userId);
+    if (userIndex == -1) {
+      throw Exception("User not found for the given ID.");
+    }
+
+    // Add the user to the editors list if not already present
+    final editors = Mock_Backend.notes[noteIndex]['editors'] as List<int>;
+    if (!editors.contains(userId)) {
+      editors.add(userId);
+      print("User ID $userId added as an editor to note ID $noteId.");
+    } else {
+      print("User ID $userId is already an editor for note ID $noteId.");
+    }
+  }
+
+  Future<void> removeEditorFromNote(int noteId, int groupId, int userId) async {
+    final note = Mock_Backend.notes.firstWhere(
+          (note) => note['id'] == noteId && note['group_id'] == groupId,
+      orElse: () => {},
+    );
+
+    if (note.isEmpty) {
+      throw Exception("Note not found for the given ID and group.");
+    }
+
+    final editors = List<int>.from(note['editors']);
+    if (!editors.contains(userId)) {
+      throw Exception("User is not an editor of this note.");
+    }
+
+    editors.remove(userId);
+    note['editors'] = editors; // Update the note
+  }
+
 
 
 }
