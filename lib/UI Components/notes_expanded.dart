@@ -157,6 +157,9 @@ class _AnimatedNoticeState extends State<AnimatedNotice>
                           IconButton(onPressed:() async {
                             await mock_api.deleteNoteById(widget.note['id'], widget.note['group_id']);
                             widget.reload();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Removed')),
+                            );
                           }, icon:Icon(Icons.delete_outline)),
                           IconButton(onPressed:() async{
                             await mock_api.updateMessageOfGroup(textController.text, widget.note['group_id'],widget.note['id']);

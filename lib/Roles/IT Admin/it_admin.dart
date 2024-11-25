@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:rbac_vrv_security_by_kshitiz/Mock%20Backend/mock_backend.dart';
+import 'package:rbac_vrv_security_by_kshitiz/UI%20Components/Groups/group_notes_list.dart';
 
 class ITAdmin extends StatefulWidget {
   const ITAdmin({Key? key}) : super(key: key);
@@ -117,19 +118,26 @@ class _UserListState extends State<UserList> {
               children: [
                 Text("Name"),
                 Text("Status"),
-                IconButton(onPressed: (){
+                ElevatedButton(onPressed: (){
                   return WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(
                       context: context,
                       builder: (context) => Dialog(
                         child: Container(
                           child: Padding(
-                            padding: const EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(20.0),
                             child: Column(
                               children: [
                                 Row(
                                   children: [
                                     Text("Name: "),
+                                    Flexible(child: TextField()),
+                                  ],
+                                ),
+                                SizedBox(height: 10,),
+                                Row(
+                                  children: [
+                                    Text("Email: "),
                                     Flexible(child: TextField()),
                                   ],
                                 ),
@@ -147,7 +155,7 @@ class _UserListState extends State<UserList> {
                                     Flexible(child: TextField()),
                                   ],
                                 ),
-                                SizedBox(height: 10,),
+                                SizedBox(height: 30,),
                                 ElevatedButton(onPressed: (){Navigator.pop(context);}, child: Text("Done")),
                               ],
                             ),
@@ -156,7 +164,7 @@ class _UserListState extends State<UserList> {
                       )
                     );
                   });
-                }, icon: Icon(Icons.add)),
+                }, child:Text("Add a user")),
               ],
             ),
           ),
@@ -167,13 +175,43 @@ class _UserListState extends State<UserList> {
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.all(10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(allusers[index]['name']),
-                          Text(allusers[index]['status']),
-                          IconButton(onPressed: (){removeuser(allusers[index]['id'],allusers[index]['name'],allusers[index]['role'],allusers[index]['status'],allusers[index]['groups']);}, icon: Icon(Icons.remove))
-                        ],
+                      child: InkWell(
+                        onTap: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>Scaffold(appBar: AppBar(title: Text(allusers[index]['name']),),body: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                children: allusers[index] .entries.map((entry) {
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(entry.key, style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(entry.value.toString()),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),),
+                              SizedBox(height: 30,),
+                              ElevatedButton(onPressed: (){removeuser(allusers[index]['id'],allusers[index]['name'],allusers[index]['role'],allusers[index]['status'],allusers[index]['groups']); Navigator.pop(context);}, child: Text("Remove")),
+                            ],
+                          ),
+                          )
+                          )
+                          );
+
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(allusers[index]['name']),
+                            Text(allusers[index]['status']),
+                            ElevatedButton(onPressed: (){removeuser(allusers[index]['id'],allusers[index]['name'],allusers[index]['role'],allusers[index]['status'],allusers[index]['groups']);}, child: Text("Remove")),
+                          ],
+                        ),
                       ),
                     );
                   }),
@@ -223,13 +261,18 @@ class _GroupsListState extends State<GroupsList> {
         child: ListView.builder(
             itemCount: allgroups.length,
             itemBuilder: (context, index) {
-              return ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(allgroups[index]['name']),
-                    Text("${allgroups[index]['members'].length}")
-                  ],
+              return InkWell(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>Scaffold(appBar: AppBar(title: Text(allgroups[index]['name']),),body: GroupNotes(groupId: allgroups[index]['id']))));
+                },
+                child: ListTile(
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text(allgroups[index]['name']),
+                      Text("${allgroups[index]['members'].length}")
+                    ],
+                  ),
                 ),
               );
             }),

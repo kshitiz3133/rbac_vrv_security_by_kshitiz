@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
               useMaterial3: true,
           ),
-          home: //ITAdmin()
-           AssociatedMember(groupId: CurrentUser.userdata['groups'].first,),
+          home: ITAdmin()
+           //AssociatedMember(groupId: CurrentUser.userdata['groups'].first,),
         ));
   }
 }
