@@ -155,6 +155,10 @@ Admins can assign and manage roles within the group. Only Admins and ITAdmins ha
 - **Authentication**: Implement actual authentication using Firebase or another authentication service.
 - **Dynamic Role Management**: Improve the role management system with more granular permissions and access controls.
 
+## Deployed Link
+
+- [https://kshitizassessment.netlify.app/](https://kshitizassessment.netlify.app/)
+
 # VIDEO SAMPLE
 
 https://github.com/user-attachments/assets/3f90072d-9805-4f4d-bc37-514b3bc41627
