@@ -16,7 +16,7 @@ This project is a **Flutter-based Role-Based Access Control (RBAC)** application
     - Editors can **edit and update notes** in the group but cannot delete notes or manage group memberships.
 
 - **Member Role**:
-    - Members can **view notes** but cannot create, update, or delete them.
+    - Members can **view and create notes** but cannot update, or delete them.
 
 - **Group Management**: Users can view which **groups** they belong to, their associated role within each group, and interact with group notes based on their role.
 
@@ -91,6 +91,7 @@ The mock backend stores data in static lists, and interactions (adding/removing 
     - **Admin**: Full control over notes and members within the group.
     - **Editor**: Can edit existing notes but cannot manage members or create new notes.
     - **Member**: Can only view notes within the group.
+    - **If a Member creates a note, they become one of the Editors.**
 
 Admins can assign and manage roles within the group. Only Admins and ITAdmins have the ability to add/remove members and change their roles.
 
