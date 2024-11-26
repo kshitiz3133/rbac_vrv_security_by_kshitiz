@@ -154,3 +154,8 @@ Admins can assign and manage roles within the group. Only Admins and ITAdmins ha
 - **Real Backend Integration**: Currently, the app uses a mock backend with static data. In the future, this can be replaced with real API calls to a backend server for user and data management.
 - **Authentication**: Implement actual authentication using Firebase or another authentication service.
 - **Dynamic Role Management**: Improve the role management system with more granular permissions and access controls.
+
+# VIDEO SAMPLE
+
+https://github.com/user-attachments/assets/3f90072d-9805-4f4d-bc37-514b3bc41627
+
