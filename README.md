@@ -81,7 +81,7 @@ The mock backend stores data in static lists, and interactions (adding/removing 
 
 - **Members** are users with limited permissions. They can:
     - View notes within their group.
-    - Cannot create, edit, or delete notes.
+    - Cannot edit, or delete notes.
     - Cannot manage members or change roles within the group.
 
 ## Group and Role Management
