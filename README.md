@@ -102,10 +102,10 @@ Admins can assign and manage roles within the group. Only Admins and ITAdmins ha
     - `Mock Backend/`: Contains mock data and API logic to simulate backend operations for notes, groups, and users.
 
 ### Key Files:
-- **`users.dart`**: Contains mock user data and their roles.
-- **`groups.dart`**: Contains mock group data and associated roles for each group.
-- **`notes.dart`**: Contains mock notes data, along with methods for creating, editing, and deleting notes.
-- **`api.dart`**: Contains methods to simulate API calls to interact with the mock data (add members, delete notes, etc.).
+- **`Roles`**: Contains mock user data and their roles.
+- **`Groups`**: Contains mock group data and associated roles for each group.
+- **`notes.dart,new_note,dart,notes_expanded.dart`**: Contains mock notes data, along with methods for creating, editing, and deleting notes.
+- **`mock_backend.dart`**: Contains methods to simulate API calls to interact with the mock data (add members, delete notes, etc.).
 
 ## Setup
 
